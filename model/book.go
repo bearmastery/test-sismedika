@@ -23,6 +23,8 @@ var (
 	once          sync.Once
 )
 
+// ResetBookStore menghapus instance singleton saat ini dan menginisialisasi ulang BookStore.
+// Digunakan hanya untuk testing atau re-init saat runtime.
 func ResetBookStore() {
 	once = sync.Once{}
 	storeInstance = &BookStore{
@@ -31,6 +33,8 @@ func ResetBookStore() {
 	}
 }
 
+// GetBookStore mengembalikan singleton instance dari BookStore.
+// Jika belum ada, maka akan diinisialisasi secara thread-safe.
 func GetBookStore() *BookStore {
 	once.Do(func() {
 		storeInstance = &BookStore{
@@ -42,15 +46,26 @@ func GetBookStore() *BookStore {
 	return storeInstance
 }
 
-func (bs *BookStore) AddBook(b Book) Book {
+// AddBook menambahkan buku baru ke dalam store dan memberikan ID secara otomatis.
+//
+// Parameters:
+//   - book: Book tanpa ID (akan diisi otomatis)
+//
+// Returns:
+//   - Book yang sudah memiliki ID
+func (bs *BookStore) AddBook(book Book) Book {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	bs.lastID++
-	b.ID = bs.lastID
-	bs.books[b.ID] = b
-	return b
+	book.ID = bs.lastID
+	bs.books[book.ID] = book
+	return book
 }
 
+// GetAllBooks mengembalikan semua buku dalam bentuk slice.
+//
+// Returns:
+//   - Slice dari semua Book yang tersimpan
 func (bs *BookStore) GetAllBooks() []Book {
 	bs.mu.RLock()
 	defer bs.mu.RUnlock()
@@ -61,6 +76,14 @@ func (bs *BookStore) GetAllBooks() []Book {
 	return books
 }
 
+// GetBookByID mencari buku berdasarkan ID.
+//
+// Parameters:
+//   - id: ID buku yang dicari
+//
+// Returns:
+//   - Book jika ditemukan
+//   - error jika tidak ditemukan
 func (bs *BookStore) GetBookByID(id int) (Book, error) {
 	bs.mu.RLock()
 	defer bs.mu.RUnlock()
@@ -71,6 +94,15 @@ func (bs *BookStore) GetBookByID(id int) (Book, error) {
 	return b, nil
 }
 
+// UpdateBook memperbarui data buku berdasarkan ID.
+//
+// Parameters:
+//   - id: ID buku yang ingin diperbarui
+//   - updated: data baru untuk buku
+//
+// Returns:
+//   - Book hasil update
+//   - error jika ID tidak ditemukan
 func (bs *BookStore) UpdateBook(id int, updated Book) (Book, error) {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
@@ -82,6 +114,13 @@ func (bs *BookStore) UpdateBook(id int, updated Book) (Book, error) {
 	return updated, nil
 }
 
+// DeleteBook menghapus buku berdasarkan ID.
+//
+// Parameters:
+//   - id: ID buku yang akan dihapus
+//
+// Returns:
+//   - error jika ID tidak ditemukan
 func (bs *BookStore) DeleteBook(id int) error {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()

@@ -10,6 +10,8 @@ import (
 	middleware2 "book-api/middleware"
 )
 
+// SetupRouter mengatur dan mengembalikan konfigurasi HTTP router utama.
+// Fungsi ini menggunakan chi router dan menambahkan middleware serta route untuk resource /books.
 func SetupRouter() http.Handler {
 	r := chi.NewRouter()
 
