@@ -1,0 +1,28 @@
+### GET ALL
+GET http://localhost:8080/books
+
+### POST
+POST http://localhost:8080/books
+Content-Type: application/json
+
+{
+  "title": "Belajar Go",
+  "author": "Riki Dev",
+  "published_year": 2025
+}
+
+### GET BY ID
+GET http://localhost:8080/books/4
+
+### PUT
+PUT http://localhost:8080/books/1
+Content-Type: application/json
+
+{
+  "title": "Belajar Golang Lanjut",
+  "author": "Riki Dev",
+  "published_year": 2026
+}
+
+### DELETE
+DELETE http://localhost:8080/books/1
