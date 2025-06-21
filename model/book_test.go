@@ -5,12 +5,11 @@ import (
 	"testing"
 )
 
-func setupStore() *BookStore {
-	ResetBookStore()
-	return GetBookStore()
+func setupStore() BookStore {
+	return NewBookStore()
 }
 
-func createBook(store *BookStore, title string, author string, year int) Book {
+func createBook(store BookStore, title string, author string, year int) Book {
 	book := Book{
 		Title:         title,
 		Author:        author,
@@ -19,17 +18,8 @@ func createBook(store *BookStore, title string, author string, year int) Book {
 	return store.AddBook(book)
 }
 
-func defaultBook(store *BookStore) Book {
+func defaultBook(store BookStore) Book {
 	return createBook(store, "Unit Testing in Go", "Go Dev", 2023)
-}
-
-func TestBookStoreSingleton(t *testing.T) {
-	store1 := GetBookStore()
-	store2 := GetBookStore()
-
-	if store1 != store2 {
-		t.Error("Expected GetBookStore to return the same instance")
-	}
 }
 
 func TestGetBookStoreEmpty(t *testing.T) {

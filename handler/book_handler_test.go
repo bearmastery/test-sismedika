@@ -15,7 +15,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var service = model.GetBookStore()
+var service = model.NewBookStore()
 var bookHandler = handler.NewBookHandler(service)
 var mockBooks = []model.Book{
 	{ID: 1, Title: "Book 1", Author: "Author A", PublishedYear: 2020},
@@ -43,7 +43,6 @@ func setupRequestWithID(method, path string, body *bytes.Buffer, handlerFunc htt
 }
 
 func setupHandlerWithData() {
-	model.ResetBookStore()
 
 	for _, b := range mockBooks {
 		service.AddBook(b)

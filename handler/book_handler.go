@@ -20,12 +20,12 @@ type BookHandler interface {
 }
 
 type bookHandler struct {
-	service *model.BookStore
+	service model.BookStore
 }
 
 // NewBookHandler menginisialisasi BookHandler dengan BookStore.
-func NewBookHandler(service *model.BookStore) BookHandler {
-	return &bookHandler{service: service}
+func NewBookHandler(service model.BookStore) BookHandler {
+	return &bookHandler{service}
 }
 
 // GetBooksHandler menangani permintaan GET /books.

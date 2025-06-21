@@ -12,38 +12,26 @@ type Book struct {
 	PublishedYear int    `json:"published_year"`
 }
 
-type BookStore struct {
+type BookStore interface {
+	AddBook(book Book) Book
+	GetAllBooks() []Book
+	GetBookByID(id int) (Book, error)
+	UpdateBook(id int, updated Book) (Book, error)
+	DeleteBook(id int) error
+}
+
+type bookStore struct {
 	mu     sync.RWMutex
 	books  map[int]Book
 	lastID int
 }
 
-var (
-	storeInstance *BookStore
-	once          sync.Once
-)
-
-// ResetBookStore menghapus instance singleton saat ini dan menginisialisasi ulang BookStore.
-// Digunakan hanya untuk testing atau re-init saat runtime.
-func ResetBookStore() {
-	once = sync.Once{}
-	storeInstance = &BookStore{
+// NewBookStore membuat instance BookStore baru dengan inisialisasi map dan ID terakhir.
+func NewBookStore() BookStore {
+	return &bookStore{
 		books:  make(map[int]Book),
 		lastID: 0,
 	}
-}
-
-// GetBookStore mengembalikan singleton instance dari BookStore.
-// Jika belum ada, maka akan diinisialisasi secara thread-safe.
-func GetBookStore() *BookStore {
-	once.Do(func() {
-		storeInstance = &BookStore{
-			books:  make(map[int]Book),
-			lastID: 0,
-		}
-	})
-
-	return storeInstance
 }
 
 // AddBook menambahkan buku baru ke dalam store dan memberikan ID secara otomatis.
@@ -53,7 +41,7 @@ func GetBookStore() *BookStore {
 //
 // Returns:
 //   - Book yang sudah memiliki ID
-func (bs *BookStore) AddBook(book Book) Book {
+func (bs *bookStore) AddBook(book Book) Book {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	bs.lastID++
@@ -66,7 +54,7 @@ func (bs *BookStore) AddBook(book Book) Book {
 //
 // Returns:
 //   - Slice dari semua Book yang tersimpan
-func (bs *BookStore) GetAllBooks() []Book {
+func (bs *bookStore) GetAllBooks() []Book {
 	bs.mu.RLock()
 	defer bs.mu.RUnlock()
 	books := []Book{}
@@ -84,7 +72,7 @@ func (bs *BookStore) GetAllBooks() []Book {
 // Returns:
 //   - Book jika ditemukan
 //   - error jika tidak ditemukan
-func (bs *BookStore) GetBookByID(id int) (Book, error) {
+func (bs *bookStore) GetBookByID(id int) (Book, error) {
 	bs.mu.RLock()
 	defer bs.mu.RUnlock()
 	b, ok := bs.books[id]
@@ -103,7 +91,7 @@ func (bs *BookStore) GetBookByID(id int) (Book, error) {
 // Returns:
 //   - Book hasil update
 //   - error jika ID tidak ditemukan
-func (bs *BookStore) UpdateBook(id int, updated Book) (Book, error) {
+func (bs *bookStore) UpdateBook(id int, updated Book) (Book, error) {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	if _, ok := bs.books[id]; !ok {
@@ -121,7 +109,7 @@ func (bs *BookStore) UpdateBook(id int, updated Book) (Book, error) {
 //
 // Returns:
 //   - error jika ID tidak ditemukan
-func (bs *BookStore) DeleteBook(id int) error {
+func (bs *bookStore) DeleteBook(id int) error {
 	bs.mu.Lock()
 	defer bs.mu.Unlock()
 	if _, ok := bs.books[id]; !ok {

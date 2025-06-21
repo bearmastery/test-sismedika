@@ -22,7 +22,7 @@ func SetupRouter() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware2.LoggerMiddleware)
 
-	bookService := model.GetBookStore()
+	bookService := model.NewBookStore()
 	bookHandler := handler.NewBookHandler(bookService)
 
 	r.Route("/books", func(r chi.Router) {
