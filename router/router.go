@@ -8,6 +8,7 @@ import (
 
 	"book-api/handler"
 	middleware2 "book-api/middleware"
+	"book-api/model"
 )
 
 // SetupRouter mengatur dan mengembalikan konfigurasi HTTP router utama.
@@ -21,12 +22,15 @@ func SetupRouter() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware2.LoggerMiddleware)
 
+	bookService := model.GetBookStore()
+	bookHandler := handler.NewBookHandler(bookService)
+
 	r.Route("/books", func(r chi.Router) {
-		r.Get("/", handler.GetBooksHandler)
-		r.Get("/{id}", handler.GetBookHandler)
-		r.Post("/", handler.CreateBookHandler)
-		r.Put("/{id}", handler.UpdateBookHandler)
-		r.Delete("/{id}", handler.DeleteBookHandler)
+		r.Get("/", bookHandler.GetBooksHandler)
+		r.Get("/{id}", bookHandler.GetBookHandler)
+		r.Post("/", bookHandler.CreateBookHandler)
+		r.Put("/{id}", bookHandler.UpdateBookHandler)
+		r.Delete("/{id}", bookHandler.DeleteBookHandler)
 	})
 
 	return r

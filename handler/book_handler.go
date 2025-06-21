@@ -11,14 +11,30 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type BookHandler interface {
+	GetBooksHandler(w http.ResponseWriter, r *http.Request)
+	GetBookHandler(w http.ResponseWriter, r *http.Request)
+	CreateBookHandler(w http.ResponseWriter, r *http.Request)
+	UpdateBookHandler(w http.ResponseWriter, r *http.Request)
+	DeleteBookHandler(w http.ResponseWriter, r *http.Request)
+}
+
+type bookHandler struct {
+	service *model.BookStore
+}
+
+// NewBookHandler menginisialisasi BookHandler dengan BookStore.
+func NewBookHandler(service *model.BookStore) BookHandler {
+	return &bookHandler{service: service}
+}
+
 // GetBooksHandler menangani permintaan GET /books.
 //
 // Params:
 //   - w: http.ResponseWriter untuk menulis response ke client.
 //   - r: *http.Request yang berisi informasi request dari client.
-func GetBooksHandler(w http.ResponseWriter, r *http.Request) {
-	store := model.GetBookStore()
-	books := store.GetAllBooks()
+func (bh *bookHandler) GetBooksHandler(w http.ResponseWriter, r *http.Request) {
+	books := bh.service.GetAllBooks()
 	utils.WriteJSON(w, http.StatusOK, books)
 }
 
@@ -32,16 +48,16 @@ func GetBooksHandler(w http.ResponseWriter, r *http.Request) {
 //   - 200 OK jika buku ditemukan
 //   - 400 Bad Request jika ID tidak valid
 //   - 404 Not Found jika buku tidak ditemukan
-func GetBookHandler(w http.ResponseWriter, r *http.Request) {
+func (bh *bookHandler) GetBookHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, "invalid book ID")
 		return
 	}
 
-	store := model.GetBookStore()
-	book, err := store.GetBookByID(id)
+	book, err := bh.service.GetBookByID(id)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err.Error())
 		return
@@ -59,7 +75,7 @@ func GetBookHandler(w http.ResponseWriter, r *http.Request) {
 // Response:
 //   - 201 Created jika sukses
 //   - 400 Bad Request jika body tidak valid atau field kosong
-func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
+func (bh *bookHandler) CreateBookHandler(w http.ResponseWriter, r *http.Request) {
 	var book model.Book
 	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, "invalid request body")
@@ -71,8 +87,7 @@ func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := model.GetBookStore()
-	created := store.AddBook(book)
+	created := bh.service.AddBook(book)
 	utils.WriteJSON(w, http.StatusCreated, created)
 }
 
@@ -86,7 +101,7 @@ func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
 //   - 200 OK jika update berhasil
 //   - 400 Bad Request jika ID/body tidak valid atau field kosong
 //   - 404 Not Found jika ID buku tidak ditemukan
-func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
+func (bh *bookHandler) UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -105,8 +120,7 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := model.GetBookStore()
-	updated, err := store.UpdateBook(id, book)
+	updated, err := bh.service.UpdateBook(id, book)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err.Error())
 		return
@@ -125,7 +139,7 @@ func UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 //   - 200 OK jika buku berhasil dihapus
 //   - 400 Bad Request jika ID tidak valid
 //   - 404 Not Found jika ID buku tidak ditemukan
-func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
+func (bh *bookHandler) DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -133,8 +147,7 @@ func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	store := model.GetBookStore()
-	err = store.DeleteBook(id)
+	err = bh.service.DeleteBook(id)
 	if err != nil {
 		utils.WriteError(w, http.StatusNotFound, err.Error())
 		return
